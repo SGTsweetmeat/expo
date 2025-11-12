@@ -5,13 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import expo.modules.devlauncher.DevLauncherController
 import expo.modules.devlauncher.compose.BindingView
-import expo.modules.devlauncher.koin.DevLauncherKoinComponent
-import expo.modules.devlauncher.services.DependencyInjection
-import org.koin.core.component.inject
 
-class DevLauncherActivity : AppCompatActivity(), DevLauncherKoinComponent {
-  private val controller: DevLauncherControllerInterface by inject()
-
+class DevLauncherActivity : AppCompatActivity() {
   override fun onStart() {
     overridePendingTransition(0, 0)
     super.onStart()
