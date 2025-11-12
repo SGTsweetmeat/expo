@@ -1,217 +1,172 @@
----
-title: Create and share internal distribution build
-sidebar_title: Internal distribution build
-description: Learn about internal distribution builds, why we need them, and how to create them.
-hasVideoLink: true
----
+import React, { useState, useRef } from 'react';
 
-import { Collapsible } from '~/ui/components/Collapsible';
-import { ContentSpotlight } from '~/ui/components/ContentSpotlight';
-import { ProgressTracker } from '~/ui/components/ProgressTracker';
-import { Terminal } from '~/ui/components/Snippet';
-import { Step } from '~/ui/components/Step';
-import { Tabs, Tab } from '~/ui/components/Tabs';
-import { CODE } from '~/ui/components/Text';
-import { VideoBoxLink } from '~/ui/components/VideoBoxLink';
+export default function DealFinderPreview() {
+  const [search, setSearch] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [photo, setPhoto] = useState(null);
+  const cameraRef = useRef(null);
 
-In this chapter, we'll learn how to set up [internal distribution builds](/build/internal-distribution/#internal-distribution).
+  const MOCK_RESULTS = [
+    { id: 1, store: 'Amazon', price: 199.99, image: 'https://via.placeholder.com/150', link: 'https://amazon.com' },
+    { id: 2, store: 'Walmart', price: 189.49, image: 'https://via.placeholder.com/150', link: 'https://walmart.com' },
+    { id: 3, store: 'eBay', price: 175.0, image: 'https://via.placeholder.com/150', link: 'https://ebay.com' }
+  ];
 
-<VideoBoxLink
-  videoId="1fQuGLHxWks"
-  title="Watch: How to create and share an internal distribution build"
-/>
+  const formatUSD = (n) => `$${n.toFixed(2)}`;
 
----
+  const handleSearch = () => {
+    setLoading(true);
+    setTimeout(() => {
+      const filtered = MOCK_RESULTS.filter((r) =>
+        r.store.toLowerCase().includes(search.toLowerCase())
+      );
+      setResults(filtered);
+      setLoading(false);
+    }, 300);
+  };
 
-## Internal distribution build
-
-Internal distribution builds are ideal for sharing updates with team members, allowing both technical and non-technical stakeholders to provide feedback directly. Unlike development builds, these do not require running a development server, simplifying the testing process.
-
-### Ways to distribute an app internally
-
-Both Google and Apple provide built-in mechanisms for sharing apps internally:
-
-- **Android**: Using Google Play beta
-- **iOS**: Using TestFlight
-
-However, both of these traditional methods have their limitations. For example, TestFlight limits to one active build at a time.
-
-### EAS Build for faster distribution
-
-EAS Build speeds up the process. It creates shareable links for our builds and provides instructions on using them. It has a default configuration designed to facilitate internal distribution, offering a more efficient alternative to traditional methods.
-
-## Create an internal distribution build
-
-To create and distribute a build with EAS Build, we need to follow these steps:
-
-<Step label="1">
-
-### Configure preview build profile
-
-From our initial setup in **eas.json**, we already have a default configuration that includes a `preview` build profile designed for internal distribution:
-
-```json eas.json
-{
-  "build": {
-    "preview": {
-      /* @info The <CODE>distribution</CODE> in <CODE>preview</CODE> profile has its value set to <CODE>internal</CODE>. */
-      "distribution": "internal"
-      /* @end */
+  const handleCameraInput = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPhoto(url);
     }
-  }
+  };
+
+  return (
+    <div
+      style={{
+        fontFamily: 'Arial, sans-serif',
+        padding: '5vw',
+        backgroundColor: '#F8FAFC',
+        minHeight: '100vh',
+        boxSizing: 'border-box'
+      }}
+    >
+      <h1 style={{ textAlign: 'center', fontSize: '6vw', marginBottom: '3vw', color: '#111' }}>DealSnap – Better Deal Finder</h1>
+      <p style={{ textAlign: 'center', color: '#333', fontSize: '4vw', marginBottom: '6vw' }}>
+        Take a picture or search for the product you want and find the best price across all stores.
+      </p>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '3vw',
+          marginBottom: '6vw'
+        }}
+      >
+        <label
+          style={{
+            background: '#2563EB',
+            color: '#fff',
+            padding: '3vw',
+            borderRadius: '2vw',
+            textAlign: 'center',
+            cursor: 'pointer',
+            fontSize: '4vw',
+            width: '90%'
+          }}
+        >
+          📷 Product Photo
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleCameraInput}
+            style={{ display: 'none' }}
+          />
+        </label>
+
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search product name..."
+          style={{
+            padding: '3vw',
+            borderRadius: '2vw',
+            border: '1px solid #ccc',
+            width: '90%',
+            fontSize: '4vw'
+          }}
+        />
+
+        <button
+          onClick={handleSearch}
+          style={{
+            width: '90%',
+            padding: '3vw',
+            background: '#16A34A',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '2vw',
+            fontSize: '4vw'
+          }}
+        >
+          Search
+        </button>
+      </div>
+
+      {photo && (
+        <div style={{ textAlign: 'center', marginBottom: '6vw' }}>
+          <img src={photo} alt="Captured" style={{ width: '90%', borderRadius: '3vw' }} />
+          <p style={{ color: '#555', fontSize: '4vw' }}>Captured image preview</p>
+        </div>
+      )}
+
+      {loading && <p style={{ textAlign: 'center', fontSize: '4vw' }}>Loading...</p>}
+
+      {!loading && results.length === 0 && (
+        <p style={{ textAlign: 'center', color: '#777', fontSize: '4vw' }}>
+          No results yet. Try searching or snapping a product photo to compare deals.
+        </p>
+      )}
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6vw'
+        }}
+      >
+        {results.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              background: '#fff',
+              padding: '5vw',
+              borderRadius: '3vw',
+              width: '90%',
+              textAlign: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+            }}
+          >
+            <img src={item.image} alt={item.store} style={{ width: '100%', borderRadius: '2vw', marginBottom: '3vw' }} />
+            <h3 style={{ fontSize: '5vw' }}>{item.store}</h3>
+            <p style={{ color: '#16A34A', fontWeight: 'bold', fontSize: '4.5vw' }}>{formatUSD(item.price)}</p>
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-block',
+                background: '#16A34A',
+                color: '#fff',
+                padding: '3vw 5vw',
+                borderRadius: '2vw',
+                textDecoration: 'none',
+                fontSize: '4vw'
+              }}
+            >
+              View Deal
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
-```
-
-This is all we need to create our first internal distribution build. The `preview` build profile from the above snippet has a `distribution` property whose value is set to `internal`. This value allows us to share our build URLs with anyone so they can install it on their device and do not require a development server to run the app.
-
-As discussed in the previous chapters, for non-app store builds, Android requires **.apk** and iOS needs **.ipa** formats. This applies to internal distribution builds as well. The `distribution` when set to `internal`, automatically creates the app binary in these file formats for devices.
-
-</Step>
-
-<Step label="2">
-
-### Create
-
-Creating an internal distribution build requires [app signing credentials](/app-signing/app-credentials/).
-
-Android app signing is non-restrictive and allows installing any compatible **.apk** file. When a development build was created, a new Android Keystore was generated for it. Hence, there is no need to generate a new keystore for preview builds.
-
-On the other hand, Apple has stricter rules for app distribution on iOS devices. We need an ad hoc provisioning profile that explicitly lists the devices allowed to run the app. Some organizations whose apps meet specific requirements may be able to use the [Apple Developer Enterprise Program](https://developer.apple.com/programs/enterprise/) to distribute apps internally to a larger audience.
-
-<Tabs>
-
-<Tab label="Android">
-
-- Use the `preview` profile to initiate an Android build:
-
-<Terminal cmd={['$ eas build --platform android --profile preview']} />
-
-- This command triggers the EAS Build, and on the EAS dashboard, we can see the build's progress:
-
-<ContentSpotlight
-  alt="Android preview build details and progress in EAS dashboard"
-  src="/static/images/tutorial/eas/android-preview-build.png"
-  className="max-w-[800px]"
-/>
-
-</Tab>
-
-<Tab label="iOS">
-
-Apps signed with an ad hoc provisioning profile can be installed by an iOS device whose UDID is registered with the provisioning profile.
-
-- To register more devices, use `eas device:create`. This command registers an iOS device and gives us a URL or QR code to share for device registration:
-
-<Terminal cmd={['$ eas device:create']} />
-
-- This command registers an iOS device for app installation, generating a shareable URL (or QR code) for device registration.
-
-  > **info** **Tip**: This command enables device registration at any time. However, only builds created post-registration will work on the newly added device.
-
-- To create the preview build, we need to use the `preview` profile with the `eas build` command:
-
-<Terminal cmd={['$ eas build --platform ios --profile preview']} />
-
-- This command triggers the EAS Build, and on the EAS dashboard, we can see the build's progress:
-
-<ContentSpotlight
-  alt="iOS preview build details and progress in EAS dashboard"
-  src="/static/images/tutorial/eas/ios-preview-build.png"
-  className="max-w-[800px]"
-/>
-
-<Collapsible summary={<>Alternative method to register devices using <CODE>eas build:resign</CODE></>}>
-
-[`eas build:resign`](/app-signing/app-credentials/#re-signing-new-credentials) command can be used to re-sign an existing iOS **.ipa** with a new ad hoc provisioning profile, eliminating the need for a full rebuild.
-
-</Collapsible>
-
-<Collapsible summary="Are you setting up enterprise provisioning?">
-
-Apple Enterprise Program membership costs $299 USD per year and [not all organizations will be eligible](https://developer.apple.com/programs/enterprise/), so you will likely be using ad hoc provisioning, which works with any normal paid Apple Developer account.
-
-If you have an [Apple Developer Enterprise Program membership](https://developer.apple.com/programs/enterprise/) users can install your app to their device without pre-registering their UDID. They just need to install the profile to their device and they can then access existing builds. You will need to sign in using your Apple Developer Enterprise account during the `eas build` process to set up the correct provisioning.
-
-If you distribute your app both through enterprise provisioning and the App Store, you will need to have a distinct bundle identifier for each context. We recommend either:
-
-- In projects generated with Expo CLI, use [**app.config.js** to dynamically switch identifiers](/tutorial/eas/multiple-app-variants/).
-- In [existing React Native projects](/bare/overview/), create a separate `scheme` for each bundle identifier and specify the scheme name in separate build profiles.
-
-</Collapsible>
-
-<Collapsible summary="Are you using manual local credentials?">
-
-If so, make sure to point your **credentials.json** to an ad hoc or enterprise provisioning profile that you generate through the Apple Developer Portal (either update an existing **credentials.json** used for another type of distribution or replace it with a new one that points to the appropriate provisioning profile). Beware that EAS CLI does only a limited validation of your local credentials, and you will have to handle device UDID registration manually. Read more about [using local credentials](/app-signing/local-credentials).
-
-</Collapsible>
-
-</Tab>
-
-</Tabs>
-
-</Step>
-
-<Step label="3">
-
-### Install
-
-Once the build finishes, the Build artifact section gets updated, indicating that the build is complete. This section provides the methods available for running the development build on an iOS device: Expo Orbit and Install button.
-
-- Open the build's detail page. If you are sharing the build with someone else, you can send them the link to the build. They'll be able to open the build's detail page or build artifact details which include Expo Orbit.
-- Connect the Android or iOS device to your machine using USB.
-- Open the Orbit menu bar app.
-- Select the **Device** in the Orbit app.
-- Under **Build artifact**, click the **Open with Orbit**.
-
-<Collapsible summary="Alternate: Use Install and QR code">
-
-- Open the build's detail page. If you are sharing the build with someone else, you can send them the link to the build page. They'll be able to open it and see build artifact details which includes Expo Orbit.
-- Click **Install** under the Build artifact section to display the **Install on a test device** popup.
-- Copy the link from **Send a link to a device** section and send it to the test device.
-
-<ContentSpotlight
-  alt="Internal distribution build details and install link in EAS dashboard"
-  src="/static/images/tutorial/eas/android-qr-code.png"
-  className="max-w-[450px]"
-/>
-
-</Collapsible>
-
-</Step>
-
-<Step label="4">
-
-### Run
-
-Tap the app icon on your device to start the preview build. There is no need for a development server.
-
-Since we have already set up multiple app variants, we can see both the development and preview variants installed separately on our devices. For example:
-
-- On Android:
-
-<ContentSpotlight
-  alt="Internal distribution build details and install link in EAS dashboard for Android"
-  src="/static/images/tutorial/eas/android-multi-variants-installed.png"
-  className="max-w-[270px]"
-/>
-
-- On iOS:
-
-<ContentSpotlight
-  alt="Internal distribution build details and install link in EAS dashboard for iOS"
-  src="/static/images/tutorial/eas/ios-multi-variants-installed.png"
-  className="max-w-[250px]"
-/>
-
-</Step>
-
-## Summary
-
-<ProgressTracker
-  currentChapterIndex={5}
-  name="EAS_TUTORIAL"
-  summary="We successfully created internal distribution builds for Android and iOS, used ad hoc provisioning for iOS, and installed multiple app variants on the same device."
-  nextChapterDescription="In the next chapter, learn about developer-facing and user-facing app versions and how to manage them automatically."
-  nextChapterTitle="Manage different app versions"
-  nextChapterLink="/tutorial/eas/manage-app-versions/"
-/>
